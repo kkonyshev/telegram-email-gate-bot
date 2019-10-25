@@ -6,15 +6,13 @@ import java.nio.file.{Files, Path}
 import java.time.{Instant, LocalDateTime, ZoneId}
 import java.util.UUID
 
-import cats.implicits._
 import cats.effect.{ContextShift, IO}
-import cats.instances.future._
-import cats.syntax.functor._
+import cats.implicits._
 import com.bot4s.telegram.api.declarative.Commands
 import com.bot4s.telegram.future.Polling
 import com.bot4s.telegram.methods.{GetFile, SendMessage}
 import com.bot4s.telegram.models.ChatId.Chat
-import com.bot4s.telegram.models.{Document, Message}
+import com.bot4s.telegram.models.Message
 import com.typesafe.config.ConfigFactory
 import courier.{Content, Envelope, Mailer, Multipart, Text}
 import javax.mail.internet.InternetAddress
@@ -43,21 +41,19 @@ class EmailGateBot(token: String, mailer: Mailer)
     withArgs { args =>
       implicit val cache = cc_list
 
-      if (args.isEmpty) replyMd("No arguments provided.").map(_ => Future.successful(unit))
+      if (args.isEmpty) replyMd("No arguments provided.").void
       else {
         args.head match {
           case "list" =>
-            replyMd(s"current cc list: ${cc_list.map(_.getAddress).mkString}")
-              .map(_ => Future.successful(unit))
+            replyMd(s"current cc list: ${cc_list.map(_.getAddress).mkString}").void
           case "add" if args.size == 2 =>
             cc_list += new InternetAddress(args(1))
-            replyMd(s"new cc list: ${cc_list.map(_.getAddress).mkString}")
-              .map(_ => Future.successful(unit))
+            replyMd(s"new cc list: ${cc_list.map(_.getAddress).mkString(", ")}").void
           case "clear" =>
             cc_list.clear()
-            replyMd(s"cc list is empty").map(_ => Future.successful(unit))
+            replyMd(s"cc list is empty").void
           case op @ _ =>
-            replyMd(s"unknown operation $op").map(_ => Future.successful(unit))
+            replyMd(s"unknown operation $op").void
         }
       }
     }
